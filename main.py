@@ -1,7 +1,7 @@
 import streamlit as st
 from PIL import Image
 import numpy as np
-import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 from streamlit_lottie import st_lottie
 import requests
 import json
@@ -293,20 +293,19 @@ with col2:
             st.markdown("<div style='padding:10px; background-color:#f0f0f0; border-radius:10px;'>", unsafe_allow_html=True)
             st.progress(min(bmi / 40, 1.0))
             
-            # BMI scale visualization
-            fig, ax = plt.subplots(figsize=(10, 2))
-            ax.set_xlim(10, 40)
-            ax.set_ylim(0, 1)
-            ax.axvspan(10, 18.5, alpha=0.3, color='blue')
-            ax.axvspan(18.5, 25, alpha=0.3, color='green')
-            ax.axvspan(25, 30, alpha=0.3, color='orange')
-            ax.axvspan(30, 40, alpha=0.3, color='red')
-            ax.axvline(x=bmi, color='black', linestyle='-', linewidth=2)
-            ax.set_yticks([])
-            ax.set_xticks([10, 18.5, 25, 30, 35, 40])
-            ax.set_xticklabels(['10', '18.5', '25', '30', '35', '40'])
-            ax.set_xlabel('BMI Scale')
-            st.pyplot(fig)
+            # BMI scale visualization using Plotly
+            fig = go.Figure()
+            bmi_ranges = [(10, 18.5, 'Underweight', 'blue'),
+                          (18.5, 25, 'Normal Weight', 'green'),
+                          (25, 30, 'Overweight', 'orange'),
+                          (30, 40, 'Obese', 'red')]
+            for start, end, label, color in bmi_ranges:
+                fig.add_shape(type="rect", x0=start, x1=end, y0=0, y1=1, fillcolor=color, opacity=0.3, line=dict(width=0))
+            fig.add_trace(go.Scatter(x=[bmi], y=[0.5], mode="markers+text", marker=dict(size=12, color="black"),
+                             text=[f"Your BMI: {bmi}"], textposition="top center"))
+            fig.update_layout(title="BMI Scale", xaxis=dict(title="BMI", tickvals=[10, 18.5, 25, 30, 35, 40]),
+                              yaxis=dict(showticklabels=False), showlegend=False, height=200)
+            st.plotly_chart(fig)
             st.markdown("</div>", unsafe_allow_html=True)
             
             # Additional health metrics
@@ -347,7 +346,6 @@ with col2:
             
             # Personalized health tips
             st.subheader("💡 Personalized Health Tips")
-            
             if category == "Underweight":
                 st.markdown("<div class='health-tip' style='background-color:rgba(51, 102, 204, 0.1); border-left:5px solid #3366cc;'>", unsafe_allow_html=True)
                 st.markdown("""
