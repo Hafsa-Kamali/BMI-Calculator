@@ -1,7 +1,8 @@
 import streamlit as st 
 from PIL import Image
 import numpy as np
-import matplotlib.pyplot as plt
+import plotly.express as px
+import plotly.graph_objects as go
 from streamlit_lottie import st_lottie
 import requests
 import json
@@ -19,7 +20,7 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-   .stApp {
+    .stApp {
         background-image: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)),
                         url('https://i.pinimg.com/736x/45/63/32/456332c909f732da36000118c44943ab.jpg');
         background-size: cover;
@@ -125,6 +126,12 @@ st.markdown(
         padding: 15px;
         border-radius: 8px;
         font-size: 18px;
+    }
+    .plotly-container {
+        background: white;
+        border-radius: 10px;
+        padding: 15px;
+        margin: 15px 0;
     }
     </style>
     """,
@@ -256,6 +263,42 @@ with col2:
             upper = round(24.9 * (height_in_meters ** 2), 1)
         return lower, upper
     
+    # Create BMI scale visualization with Plotly
+    def create_bmi_gauge(bmi_value):
+        fig = go.Figure(go.Indicator(
+            mode = "gauge+number",
+            value = bmi_value,
+            domain = {'x': [0, 1], 'y': [0, 1]},
+            title = {'text': "BMI Scale"},
+            gauge = {
+                'axis': {'range': [10, 50], 'tickwidth': 1, 'tickcolor': "darkblue"},
+                'bar': {'color': "darkblue"},
+                'bgcolor': "white",
+                'borderwidth': 2,
+                'bordercolor': "gray",
+                'steps': [
+                    {'range': [10, 18.5], 'color': '#3366cc'},
+                    {'range': [18.5, 25], 'color': '#4CAF50'},
+                    {'range': [25, 30], 'color': '#ff9800'},
+                    {'range': [30, 35], 'color': '#f44336'},
+                    {'range': [35, 40], 'color': '#e91e63'},
+                    {'range': [40, 50], 'color': '#9c27b0'}],
+                'threshold': {
+                    'line': {'color': "white", 'width': 6},
+                    'thickness': 0.75,
+                    'value': bmi_value}
+            }
+        ))
+        
+        fig.update_layout(
+            height=300,
+            margin=dict(l=20, r=20, t=50, b=20),
+            paper_bgcolor="rgba(0,0,0,0)",
+            font=dict(color="white")
+        )
+        
+        return fig
+    
     # Button to calculate with loading animation
     st.markdown("<div class='content-section'>", unsafe_allow_html=True)
     if st.button("📊 Calculate Health Metrics"):
@@ -289,24 +332,10 @@ with col2:
             # Description
             st.markdown(f"<p style='font-size:18px;'>{description}</p>", unsafe_allow_html=True)
             
-            # Visual feedback with progress bar and custom styling
-            st.markdown("<div style='padding:10px; background-color:#f0f0f0; border-radius:10px;'>", unsafe_allow_html=True)
-            st.progress(min(bmi / 40, 1.0))
-            
-            # BMI scale visualization
-            fig, ax = plt.subplots(figsize=(10, 2))
-            ax.set_xlim(10, 40)
-            ax.set_ylim(0, 1)
-            ax.axvspan(10, 18.5, alpha=0.3, color='blue')
-            ax.axvspan(18.5, 25, alpha=0.3, color='green')
-            ax.axvspan(25, 30, alpha=0.3, color='orange')
-            ax.axvspan(30, 40, alpha=0.3, color='red')
-            ax.axvline(x=bmi, color='black', linestyle='-', linewidth=2)
-            ax.set_yticks([])
-            ax.set_xticks([10, 18.5, 25, 30, 35, 40])
-            ax.set_xticklabels(['10', '18.5', '25', '30', '35', '40'])
-            ax.set_xlabel('BMI Scale')
-            st.pyplot(fig)
+            # Visual feedback with Plotly gauge chart
+            st.markdown("<div class='plotly-container'>", unsafe_allow_html=True)
+            fig = create_bmi_gauge(bmi)
+            st.plotly_chart(fig, use_container_width=True)
             st.markdown("</div>", unsafe_allow_html=True)
             
             # Additional health metrics
@@ -341,127 +370,145 @@ with col2:
                     st.markdown(f"<h2 style='text-align:center;'>{lower_lbs} - {upper_lbs} lbs</h2>", unsafe_allow_html=True)
                 else:
                     st.markdown(f"<h2 style='text-align:center;'>{lower_weight} - {upper_weight} kg</h2>", unsafe_allow_html=True)
-                
-                st.markdown("<p style='text-align:center;'>Healthy weight range for your height</p>", unsafe_allow_html=True)
-                st.markdown("</div>", unsafe_allow_html=True)
             
-            # Personalized health tips
-            st.subheader("💡 Personalized Health Tips")
-            
-            if category == "Underweight":
-                st.markdown("<div class='health-tip' style='background-color:rgba(51, 102, 204, 0.1); border-left:5px solid #3366cc;'>", unsafe_allow_html=True)
-                st.markdown("""
-                <ul>
-                    <li>Consider increasing your calorie intake with nutrient-dense foods</li>
-                    <li>Include healthy fats like avocados, nuts, and olive oil in your diet</li>
-                    <li>Incorporate strength training to build muscle mass</li>
-                    <li>Consult with a healthcare provider or dietitian for personalized advice</li>
-                </ul>
-                """, unsafe_allow_html=True)
-                st.markdown("</div>", unsafe_allow_html=True)
-            
-            elif category == "Normal Weight":
-                st.markdown("<div class='health-tip' style='background-color:rgba(76, 175, 80, 0.1); border-left:5px solid #4CAF50;'>", unsafe_allow_html=True)
-                st.markdown("""
-                <ul>
-                    <li>Maintain your balanced diet and regular exercise routine</li>
-                    <li>Aim for 150 minutes of moderate exercise per week</li>
-                    <li>Stay hydrated and get adequate sleep</li>
-                    <li>Continue regular health check-ups</li>
-                </ul>
-                """, unsafe_allow_html=True)
-                st.markdown("</div>", unsafe_allow_html=True)
-            
-            elif category == "Overweight":
-                st.markdown("<div class='health-tip' style='background-color:rgba(255, 152, 0, 0.1); border-left:5px solid #ff9800;'>", unsafe_allow_html=True)
-                st.markdown("""
-                <ul>
-                    <li>Focus on portion control and mindful eating</li>
-                    <li>Increase physical activity gradually (aim for 30 minutes daily)</li>
-                    <li>Reduce processed foods and added sugars</li>
-                    <li>Consider consulting a healthcare provider for personalized advice</li>
-                </ul>
-                """, unsafe_allow_html=True)
-                st.markdown("</div>", unsafe_allow_html=True)
-            
-            else:  # Obese categories
-                st.markdown("<div class='health-tip' style='background-color:rgba(244, 67, 54, 0.1); border-left:5px solid #f44336;'>", unsafe_allow_html=True)
-                st.markdown("""
-                <ul>
-                    <li>Consult with healthcare professionals for a comprehensive weight management plan</li>
-                    <li>Consider working with a registered dietitian for personalized nutrition guidance</li>
-                    <li>Start with gentle, low-impact exercises like walking or swimming</li>
-                    <li>Focus on sustainable lifestyle changes rather than quick fixes</li>
-                    <li>Monitor other health metrics like blood pressure and cholesterol</li>
-                </ul>
-                """, unsafe_allow_html=True)
-                st.markdown("</div>", unsafe_allow_html=True)
-            
-            # Weight management plan
-            st.subheader("🗓️ Weight Management Plan")
-            
-            # Weight goal
-            if category == "Underweight":
-                goal = "gain"
-                calories_change = 500
-            elif category in ["Normal Weight"]:
-                goal = "maintain"
-                calories_change = 0
+            st.markdown("<p style='text-align:center;'>Healthy weight range for your height</p>", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+        
+        # Personalized health tips
+        st.subheader("💡 Personalized Health Tips")
+        
+        if category == "Underweight":
+            st.markdown("<div class='health-tip' style='background-color:rgba(51, 102, 204, 0.1); border-left:5px solid #3366cc;'>", unsafe_allow_html=True)
+            st.markdown("""
+            <ul>
+                <li>Consider increasing your calorie intake with nutrient-dense foods</li>
+                <li>Include healthy fats like avocados, nuts, and olive oil in your diet</li>
+                <li>Incorporate strength training to build muscle mass</li>
+                <li>Consult with a healthcare provider or dietitian for personalized advice</li>
+            </ul>
+            """, unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+        
+        elif category == "Normal Weight":
+            st.markdown("<div class='health-tip' style='background-color:rgba(76, 175, 80, 0.1); border-left:5px solid #4CAF50;'>", unsafe_allow_html=True)
+            st.markdown("""
+            <ul>
+                <li>Maintain your balanced diet and regular exercise routine</li>
+                <li>Aim for 150 minutes of moderate exercise per week</li>
+                <li>Stay hydrated and get adequate sleep</li>
+                <li>Continue regular health check-ups</li>
+            </ul>
+            """, unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+        
+        elif category == "Overweight":
+            st.markdown("<div class='health-tip' style='background-color:rgba(255, 152, 0, 0.1); border-left:5px solid #ff9800;'>", unsafe_allow_html=True)
+            st.markdown("""
+            <ul>
+                <li>Focus on portion control and mindful eating</li>
+                <li>Increase physical activity gradually (aim for 30 minutes daily)</li>
+                <li>Reduce processed foods and added sugars</li>
+                <li>Consider consulting a healthcare provider for personalized advice</li>
+            </ul>
+            """, unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+        
+        else:  # Obese categories
+            st.markdown("<div class='health-tip' style='background-color:rgba(244, 67, 54, 0.1); border-left:5px solid #f44336;'>", unsafe_allow_html=True)
+            st.markdown("""
+            <ul>
+                <li>Consult with healthcare professionals for a comprehensive weight management plan</li>
+                <li>Consider working with a registered dietitian for personalized nutrition guidance</li>
+                <li>Start with gentle, low-impact exercises like walking or swimming</li>
+                <li>Focus on sustainable lifestyle changes rather than quick fixes</li>
+                <li>Monitor other health metrics like blood pressure and cholesterol</li>
+            </ul>
+            """, unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+        
+        # Weight management plan
+        st.subheader("🗓️ Weight Management Plan")
+        
+        # Weight goal
+        if category == "Underweight":
+            goal = "gain"
+            calories_change = 500
+        elif category in ["Normal Weight"]:
+            goal = "maintain"
+            calories_change = 0
+        else:
+            goal = "lose"
+            calories_change = -500
+        
+        if goal != "maintain":
+            target_calories = daily_calories + calories_change
+            st.markdown(f"""
+            <div style='background-color:rgba(33, 150, 243, 0.1); padding:15px; border-radius:8px; margin-top:10px;'>
+                <h4>Recommended daily calorie intake to {goal} weight:</h4>
+                <h2 style='text-align:center;'>{target_calories} kcal/day</h2>
+                <p>This would result in approximately {abs(calories_change/500)} lb ({abs(calories_change/500 * 0.453592):.1f} kg) {goal} per week.</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # Create a weight projection chart
+        if goal != "maintain":
+            weeks = list(range(0, 13))  # 12 weeks projection
+            if goal == "lose":
+                current_weight_kg = weight
+                projected_weights = [current_weight_kg + (i * (calories_change/500 * 0.453592)) for i in range(0, 13)]
+                title = "12-Week Weight Loss Projection"
             else:
-                goal = "lose"
-                calories_change = -500
+                current_weight_kg = weight
+                projected_weights = [current_weight_kg + (i * abs(calories_change/500 * 0.453592)) for i in range(0, 13)]
+                title = "12-Week Weight Gain Projection"
             
-            if goal != "maintain":
-                target_calories = daily_calories + calories_change
-                st.markdown(f"""
-                <div style='background-color:rgba(33, 150, 243, 0.1); padding:15px; border-radius:8px; margin-top:10px;'>
-                    <h4>Recommended daily calorie intake to {goal} weight:</h4>
-                    <h2 style='text-align:center;'>{target_calories} kcal/day</h2>
-                    <p>This would result in approximately {abs(calories_change/500)} lb ({abs(calories_change/500 * 0.453592):.1f} kg) {goal} per week.</p>
-                </div>
-                """, unsafe_allow_html=True)
-            
-            # Download button for report
-            st.download_button(
-                label="📥 Download Health Report",
-                data=f"""
-                BMI HEALTH REPORT
-                -----------------
-                Date: {time.strftime("%Y-%m-%d")}
-                
-                MEASUREMENTS
-                Height: {height_in_meters*100:.1f} cm
-                Weight: {weight:.1f} kg
-                BMI: {bmi}
-                Category: {category}
-                
-                HEALTH METRICS
-                BMR: {bmr} kcal/day
-                Daily Calorie Needs: {daily_calories} kcal/day
-                Ideal Weight Range: {lower_weight} - {upper_weight} kg
-                
-                RECOMMENDATIONS
-                {description}
-                """,
-                file_name="bmi_health_report.txt",
-                mime="text/plain",
+            # Create the plot with Plotly Express
+            fig = px.line(
+                x=weeks,
+                y=projected_weights,
+                labels={'x': 'Weeks', 'y': 'Weight (kg)'},
+                title=title
             )
             
-            st.markdown("</div>", unsafe_allow_html=True)
-    
-    st.markdown("</div>", unsafe_allow_html=True)
+            # Customize the plot
+            fig.update_traces(line=dict(color=color, width=3))
+            fig.update_layout(
+                plot_bgcolor='rgba(0,0,0,0)',
+                paper_bgcolor='rgba(0,0,0,0)',
+                xaxis=dict(showgrid=True, gridcolor='lightgray'),
+                yaxis=dict(showgrid=True, gridcolor='lightgray'),
+                hovermode="x"
+            )
+            
+            # Display the plot
+            st.plotly_chart(fig, use_container_width=True)
+        
+        # Download button for report
+        st.download_button(
+            label="📥 Download Health Report",
+            data=f"""
+            BMI HEALTH REPORT
+            -----------------
+            Date: {time.strftime("%Y-%m-%d")}
+            
+            MEASUREMENTS
+            Height: {height_in_meters*100:.1f} cm
+            Weight: {weight:.1f} kg
+            BMI: {bmi}
+            Category: {category}
+            
+            HEALTH METRICS
+            BMR: {bmr} kcal/day
+            Daily Calorie Needs: {daily_calories} kcal/day
+            Ideal Weight Range: {lower_weight} - {upper_weight} kg
+            
+            RECOMMENDATIONS
+            {description}
+            """,
+            file_name="bmi_health_report.txt",
+            mime="text/plain",
+        )
+        
+        st.markdown("</div>", unsafe_allow_html=True)
 
-# Footer
-st.markdown("<div class='footer'>", unsafe_allow_html=True)
-st.markdown("Made with ❤️ by [Hafsa Kamali](https://github.com/Hafsa-Kamali/)", unsafe_allow_html=True)
-st.markdown("© 2025 BMI Calculator | Privacy Policy | Terms of Service", unsafe_allow_html=True)
 st.markdown("</div>", unsafe_allow_html=True)
-
-# Disclaimer
-st.markdown("""
-<div style='background-color:rgba(255, 235, 59, 0.3); padding:15px; border-radius:8px; margin-top:20px; border-left:5px solid #FFEB3B;'>
-    <h4>⚠️ Disclaimer</h4>
-    <p>This BMI Calculator is for informational purposes only and not a substitute for professional medical advice. 
-    Always consult with a healthcare professional before making any health-related decisions.</p>
-</div>
-""", unsafe_allow_html=True)
