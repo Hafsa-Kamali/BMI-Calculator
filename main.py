@@ -516,3 +516,12 @@ st.markdown("<div class='footer'>", unsafe_allow_html=True)
 st.markdown("Made with ❤️ by Hafsa Kamali", unsafe_allow_html=True)
 st.markdown("© 2025 BMI Calculator | Privacy Policy | Terms of Service", unsafe_allow_html=True)
 st.markdown("</div>", unsafe_allow_html=True)
+st.markdown("""
+<div style='background-color:rgba(255, 235, 59, 0.3); 
+            padding:15px; 
+            border-radius:8px; 
+            margin-top:20px; 
+            border-left:5px solid #FFEB3B;'> 
+            <h4>⚠️ Disclaimer</h4> 
+            <p>This BMI Calculator is for informational purposes only and not a substitute for professional medical advice. Always consult with a healthcare professional before making any health-related decisions.</p>
+             </div> """, unsafe_allow_html=True)
