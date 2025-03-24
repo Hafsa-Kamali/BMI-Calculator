@@ -1,6 +1,1 @@
-streamlit
-Pillow
-numpy
-matplotlib
-requests
-streamlit-lottie
+libgl1
