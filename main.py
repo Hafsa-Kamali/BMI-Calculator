@@ -512,3 +512,7 @@ with col2:
         st.markdown("</div>", unsafe_allow_html=True)
 
 st.markdown("</div>", unsafe_allow_html=True)
+st.markdown("<div class='footer'>", unsafe_allow_html=True)
+st.markdown("Made with ❤️ by Hafsa Kamali", unsafe_allow_html=True)
+st.markdown("© 2025 BMI Calculator | Privacy Policy | Terms of Service", unsafe_allow_html=True)
+st.markdown("</div>", unsafe_allow_html=True)
